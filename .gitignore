@@ -1,0 +1,4 @@
+# keep your personal settings out of git if you copy this repo
+config.local.py
+*.bin
+__pycache__/

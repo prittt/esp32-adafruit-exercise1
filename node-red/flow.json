@@ -1,0 +1,390 @@
+[
+  {
+    "id": "ex1tab0000000001",
+    "type": "tab",
+    "label": "ESP32 Exercise 1 (serial + Adafruit IO)",
+    "disabled": false,
+    "info": "1) Double-click 'ESP32 serial in' -> edit the serial port (COM3 on Windows, /dev/ttyUSB0 on Linux, /dev/cu.* on macOS).\n2) Double-click any MQTT node -> edit 'Adafruit IO' broker -> Security tab: Username = your Adafruit IO username, Password = your Adafruit IO key.\n3) Replace YOUR_AIO_USERNAME in the 3 MQTT node topics with your Adafruit IO username.\n4) Deploy."
+  },
+  {
+    "id": "ex1serialin00000",
+    "type": "serial in",
+    "z": "ex1tab0000000001",
+    "name": "ESP32 serial in",
+    "serial": "ex1serialport001",
+    "x": 150,
+    "y": 100,
+    "wires": [
+      [
+        "ex1parse00000000",
+        "ex1rawdebug00000"
+      ]
+    ]
+  },
+  {
+    "id": "ex1rawdebug00000",
+    "type": "debug",
+    "z": "ex1tab0000000001",
+    "name": "raw serial",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 400,
+    "y": 60,
+    "wires": []
+  },
+  {
+    "id": "ex1parse00000000",
+    "type": "function",
+    "z": "ex1tab0000000001",
+    "name": "parse TEMP / LED",
+    "func": "const line = String(msg.payload).trim();\nif (line.startsWith('TEMP:')) {\n    const t = parseFloat(line.slice(5));\n    if (isNaN(t)) return null;\n    node.status({fill: 'blue', shape: 'dot', text: t + ' °C'});\n    return [{topic: 'temperature', payload: t}, null];\n}\nif (line.startsWith('LED:')) {\n    const s = line.slice(4).trim();\n    node.status({fill: s === 'ON' ? 'yellow' : 'grey', shape: 'dot', text: 'LED ' + s});\n    return [null, {topic: 'led', payload: s}];\n}\nreturn null; // info lines starting with '#'",
+    "outputs": 2,
+    "x": 400,
+    "y": 120,
+    "wires": [
+      [
+        "ex1tempdebug0000"
+      ],
+      [
+        "ex1leddebug00000"
+      ]
+    ]
+  },
+  {
+    "id": "ex1tempdebug0000",
+    "type": "debug",
+    "z": "ex1tab0000000001",
+    "name": "temperature",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 650,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "ex1leddebug00000",
+    "type": "debug",
+    "z": "ex1tab0000000001",
+    "name": "LED state",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 650,
+    "y": 140,
+    "wires": []
+  },
+  {
+    "id": "ex1injecton00000",
+    "type": "inject",
+    "z": "ex1tab0000000001",
+    "name": "LED ON",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "once": false,
+    "topic": "",
+    "payload": "ON",
+    "payloadType": "str",
+    "x": 150,
+    "y": 240,
+    "wires": [
+      [
+        "ex1serialout0000",
+        "ex1cmddebug00000"
+      ]
+    ]
+  },
+  {
+    "id": "ex1injectoff0000",
+    "type": "inject",
+    "z": "ex1tab0000000001",
+    "name": "LED OFF",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "once": false,
+    "topic": "",
+    "payload": "OFF",
+    "payloadType": "str",
+    "x": 150,
+    "y": 290,
+    "wires": [
+      [
+        "ex1serialout0000",
+        "ex1cmddebug00000"
+      ]
+    ]
+  },
+  {
+    "id": "ex1serialout0000",
+    "type": "serial out",
+    "z": "ex1tab0000000001",
+    "name": "ESP32 serial out",
+    "serial": "ex1serialport001",
+    "x": 400,
+    "y": 260,
+    "wires": []
+  },
+  {
+    "id": "ex1cmddebug00000",
+    "type": "debug",
+    "z": "ex1tab0000000001",
+    "name": "command sent",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 400,
+    "y": 310,
+    "wires": []
+  },
+  {
+    "id": "ex1aiocomment000",
+    "type": "comment",
+    "z": "ex1tab0000000001",
+    "name": "Adafruit IO: publish ON/OFF to esp32-led (dashboard toggle + ESP32 follow)",
+    "info": "Replace YOUR_AIO_USERNAME in the MQTT topics and set username/key in the 'Adafruit IO' broker (Security tab).",
+    "x": 300,
+    "y": 380,
+    "wires": []
+  },
+  {
+    "id": "ex1aioon00000000",
+    "type": "inject",
+    "z": "ex1tab0000000001",
+    "name": "AIO LED ON",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "once": false,
+    "topic": "",
+    "payload": "ON",
+    "payloadType": "str",
+    "x": 160,
+    "y": 430,
+    "wires": [
+      [
+        "ex1aioout0000000",
+        "ex1aiodbg0000000"
+      ]
+    ]
+  },
+  {
+    "id": "ex1aiooff0000000",
+    "type": "inject",
+    "z": "ex1tab0000000001",
+    "name": "AIO LED OFF",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "once": false,
+    "topic": "",
+    "payload": "OFF",
+    "payloadType": "str",
+    "x": 160,
+    "y": 480,
+    "wires": [
+      [
+        "ex1aioout0000000",
+        "ex1aiodbg0000000"
+      ]
+    ]
+  },
+  {
+    "id": "ex1aioout0000000",
+    "type": "mqtt out",
+    "z": "ex1tab0000000001",
+    "name": "publish esp32-led",
+    "topic": "YOUR_AIO_USERNAME/feeds/esp32-led",
+    "qos": "0",
+    "retain": "false",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "ex1aiobroker0001",
+    "x": 430,
+    "y": 440,
+    "wires": []
+  },
+  {
+    "id": "ex1aiodbg0000000",
+    "type": "debug",
+    "z": "ex1tab0000000001",
+    "name": "AIO command sent",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 430,
+    "y": 490,
+    "wires": []
+  },
+  {
+    "id": "ex1aioin00000000",
+    "type": "mqtt in",
+    "z": "ex1tab0000000001",
+    "name": "esp32-led feed",
+    "topic": "YOUR_AIO_USERNAME/feeds/esp32-led",
+    "qos": "0",
+    "datatype": "utf8",
+    "broker": "ex1aiobroker0001",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 160,
+    "y": 560,
+    "wires": [
+      [
+        "ex1aioindbg00000"
+      ]
+    ]
+  },
+  {
+    "id": "ex1aioindbg00000",
+    "type": "debug",
+    "z": "ex1tab0000000001",
+    "name": "AIO feed esp32-led",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 430,
+    "y": 560,
+    "wires": []
+  },
+  {
+    "id": "ex1aiotin0000000",
+    "type": "mqtt in",
+    "z": "ex1tab0000000001",
+    "name": "esp32-temperature feed",
+    "topic": "YOUR_AIO_USERNAME/feeds/esp32-temperature",
+    "qos": "0",
+    "datatype": "utf8",
+    "broker": "ex1aiobroker0001",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 170,
+    "y": 610,
+    "wires": [
+      [
+        "ex1aiotdbg000000"
+      ]
+    ]
+  },
+  {
+    "id": "ex1aiotdbg000000",
+    "type": "debug",
+    "z": "ex1tab0000000001",
+    "name": "AIO feed esp32-temperature",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 450,
+    "y": 610,
+    "wires": []
+  },
+  {
+    "id": "ex1comment000000",
+    "type": "comment",
+    "z": "ex1tab0000000001",
+    "name": "Serial: ESP32 prints TEMP:<v> and LED:<state>; inject ON/OFF to switch the LED",
+    "info": "Set your serial port in the 'ESP32 serial port' config node.",
+    "x": 300,
+    "y": 30,
+    "wires": []
+  },
+  {
+    "id": "ex1serialport001",
+    "type": "serial-port",
+    "name": "ESP32 serial port",
+    "serialport": "COM3",
+    "serialbaud": "115200",
+    "databits": "8",
+    "parity": "none",
+    "stopbits": "1",
+    "waitfor": "",
+    "dtr": "none",
+    "rts": "none",
+    "cts": "none",
+    "dsr": "none",
+    "newline": "\\n",
+    "bin": "false",
+    "out": "char",
+    "addchar": "\\n",
+    "responsetimeout": "10000"
+  },
+  {
+    "id": "ex1aiobroker0001",
+    "type": "mqtt-broker",
+    "name": "Adafruit IO",
+    "broker": "io.adafruit.com",
+    "port": "8883",
+    "tls": "",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": true,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "willMsg": {},
+    "userProps": "",
+    "sessionExpiry": ""
+  }
+]
