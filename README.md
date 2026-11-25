@@ -1,4 +1,4 @@
-# Exercise 1 – ESP32 ↔ Adafruit IO (MQTT) ↔ Node-RED
+# ESP32 ↔ Adafruit IO (MQTT) ↔ Node-RED
 
 An ESP32 running **MicroPython**:
 
